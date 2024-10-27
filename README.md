@@ -64,3 +64,12 @@ If you discover a security vulnerability within Laravel, please send an e-mail t
 ## License
 
 The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+
+
+### Setup
+
+1. php artisan serve
+2. navigate to http://127.0.0.1:8000/upload-csv
+3. Upload a Csv and click 'Upload and Parse' button
+   
+
