@@ -7,69 +7,121 @@
 <a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
 </p>
 
-## About Laravel
+# Homeowner Names Parser - Technical Test
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+## Overview
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+This project is a PHP-based service that processes a CSV file of homeowner data, parsing and standardizing name fields. Each entry may contain one or multiple homeowners in different formats, and this service splits them into individual records with properly structured attributes.
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+### Requirements:
+- **Input**: CSV file containing homeowner names.
+- **Output**: JSON array where each homeowner’s name is parsed into:
+  - `title` (required)
+  - `first_name` (optional)
+  - `initial` (optional)
+  - `last_name` (required)
 
-## Learning Laravel
+### Example Outputs
+- **Input**: "Mr John Smith"  
+  **Output**:
+    ```php
+    [
+      'title' => 'Mr',
+      'first_name' => 'John',
+      'initial' => null,
+      'last_name' => 'Smith'
+    ]
+    ```
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
+- **Input**: "Mr and Mrs Smith"  
+  **Output**:
+    ```php
+    [
+      [
+        'title' => 'Mr',
+        'first_name' => null,
+        'initial' => null,
+        'last_name' => 'Smith'
+      ],
+      [
+        'title' => 'Mrs',
+        'first_name' => null,
+        'initial' => null,
+        'last_name' => 'Smith'
+      ]
+    ]
+    ```
 
-You may also try the [Laravel Bootcamp](https://bootcamp.laravel.com), where you will be guided through building a modern Laravel application from scratch.
-
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
-
-## Laravel Sponsors
-
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the [Laravel Partners program](https://partners.laravel.com).
-
-### Premium Partners
-
-- **[Vehikl](https://vehikl.com/)**
-- **[Tighten Co.](https://tighten.co)**
-- **[WebReinvent](https://webreinvent.com/)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel/)**
-- **[Cyber-Duck](https://cyber-duck.co.uk)**
-- **[DevSquad](https://devsquad.com/hire-laravel-developers)**
-- **[Jump24](https://jump24.co.uk)**
-- **[Redberry](https://redberry.international/laravel/)**
-- **[Active Logic](https://activelogic.com)**
-- **[byte5](https://byte5.de)**
-- **[OP.GG](https://op.gg)**
-
-## Contributing
-
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
-
-## Code of Conduct
-
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
-
-## Security Vulnerabilities
-
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
-
-## License
-
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
-
+- **Input**: "Mr J. Smith"  
+  **Output**:
+    ```php
+    [
+      'title' => 'Mr',
+      'first_name' => null,
+      'initial' => 'J',
+      'last_name' => 'Smith'
+    ]
+    ```
 
 ## Setup
 
 1. php artisan serve
 2. navigate to http://127.0.0.1:8000/upload-csv
 3. Upload a Csv and click 'Upload and Parse' button
+
+
+## Implementation Details
+
+The service includes methods for parsing names and processing CSV input files. Below is a breakdown of the main functions:
+
+### 1. `parseName($name)`
+This method:
+- Splits a single name string into its components: `title`, `initial`, `first_name`, and `last_name`.
+- Recognizes common titles (e.g., Mr, Mrs, Dr) and handles initials when present.
+- Returns an array with each parsed component.
+
+### 2. `getLastName($people)`
+This helper method:
+- Ensures that if multiple people are in one entry and only one last name is provided, the last name is applied to both entries.
+
+### 3. `parseRow($name)`
+This method:
+- Processes a name field containing multiple homeowners by splitting on “and” or “&” and applies `parseName` to each part.
+- Uses `getLastName` if only one last name is present to ensure all homeowners have complete information.
+
+### 4. `parseCSV($request)`
+This method:
+- Accepts an HTTP request with a CSV file, reads the file, and processes each row.
+- Uses `parseRow` on each row’s name field and consolidates all parsed entries.
+- Outputs the parsed result as a JSON response.
+
+## Usage
+
+1. **Upload CSV**: Place the CSV file in the application (either through a front-end or CLI).
+2. **Parse and Export**: The service will output parsed names as a JSON array.
+
+## Dependencies
+
+- PHP >= 7.4
+- Laravel (for request and JSON response handling)
+
+## Running the Service
+
+To use this service:
+1. Clone the repository and ensure Laravel dependencies are installed.
+2. Upload a CSV with homeowner data.
+3. Run the application, and the parsed output will be available as a JSON response.
+
+## Notes
+
+- **Multiple Homeowners**: Entries with multiple people (e.g., “Mr & Mrs Smith”) will be split and assigned the same last name if only one is present.
+- **Error Handling**: Basic error handling is included for missing or invalid file input.
+
+## Future Enhancements
+
+- **Improved Error Handling**: Better handling for malformed or empty rows.
+- **Additional Title Recognition**: Support for more titles if required.
+- **Unit Testing**: Comprehensive tests to validate parsing functionality.
+
    
 
